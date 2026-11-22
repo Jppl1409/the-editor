@@ -1,5 +1,6 @@
 // The Editor: escolha de idioma em Settings → General. Fica fora da tradução (data-no-translate)
 // para os dois nomes aparecerem sempre iguais.
+import type { JSX } from "react";
 import { getLanguage, setLanguage, type Language } from "./dom-translate";
 
 const OPTIONS: ReadonlyArray<{ value: Language; label: string }> = [
