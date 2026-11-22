@@ -12,6 +12,7 @@ name: The Editor — instaladores (Mac + Windows)
 #
 # Os workflows herdados do OpenReel (ci, release, perf-gate…) disparam em `main` e em tags `v*`;
 # aqui o branch é `the-editor` e as tags são `theeditor-v*`, então eles não rodam.
+# Repositório: https://github.com/Jppl1409/the-editor
 
 on:
   workflow_dispatch:
