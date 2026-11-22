@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/main/schemas/mcpb-manifest-v0.2.schema.json",
+  "manifest_version": "0.2",
+  "name": "the-editor",
+  "display_name": "The Editor",
+  "version": "0.0.0",
+  "description": "Edite vídeos no The Editor pelo seu Claude: importar, cortar, legendar, aplicar efeitos e exportar.",
+  "long_description": "Liga o Claude ao The Editor, o editor de vídeo instalado no seu computador. Com o The Editor aberto, peça em linguagem natural (\"importa os vídeos da pasta X, corta os silêncios, legenda em português e exporta em 9:16\") e o Claude executa na sua timeline, onde você acompanha e ajusta à mão. Tudo roda no seu computador: a extensão só repassa os pedidos para o app aberto (endereço local 127.0.0.1). O uso de IA conta no seu próprio plano do Claude.",
+  "author": {
+    "name": "The Founders"
+  },
+  "icon": "icon.png",
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"]
+    }
+  },
+  "tools_generated": true,
+  "keywords": ["vídeo", "editor", "legenda", "edição", "video", "editing"],
+  "license": "MIT",
+  "compatibility": {
+    "platforms": ["win32", "darwin", "linux"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}

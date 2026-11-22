@@ -1,0 +1,130 @@
+/* ============================================================
+   The Editor — paleta Azul Klein (#002FA7) + tons de branco.
+   Carregado depois do index.css e com seletores mais específicos
+   (html[...]), então vence os tokens originais do OpenReel nos dois modos,
+   inclusive os do reference-workspace.css. Para mudar a paleta,
+   mexa só aqui.
+   ============================================================ */
+
+/* ---------- Claro (opcional, em Settings): brancos + Klein ---------- */
+html:root,
+html[data-theme="light"] {
+  --bg: #f4f6fb;
+  --bg-1: #ffffff;
+  --bg-2: #eef1f9;
+  --bg-3: #e3e8f5;
+  --bg-elev: #ffffff;
+  --border: #dfe4f0;
+  --border-strong: #c6cee4;
+  --fg: #0a1433;
+  --fg-2: #2b3553;
+  --fg-3: #5f6986;
+  --fg-muted: #8b93ab;
+  --hover: #eef1f9;
+  --selected: #e5ebfa;
+  --shadow-sm: 0 1px 2px rgba(0, 23, 84, 0.06);
+  --shadow-md: 0 6px 20px rgba(0, 23, 84, 0.08);
+  --shadow-lg: 0 24px 60px rgba(0, 23, 84, 0.16);
+  --track-bg: #f7f9fd;
+  --tl-bg: #ffffff;
+  --waveform: #8ea6e6;
+  --stage-bg: #ffffff;
+  --screen-bg: #ffffff;
+  --control-bg: #f4f6fb;
+  --text-button-bg: #eef1f9;
+
+  --accent: #002fa7;
+  --accent-strong: #00238a;
+  --accent-soft: #e5ebfa;
+  --accent-fg: #ffffff;
+  --accent-glow: rgba(0, 47, 167, 0.3);
+
+  --c-video: #002fa7;
+  --c-text: #5b4fc4;
+  --c-audio: #3d63c9;
+  --c-music: #7a8fc4;
+  --c-audio-waveform: #c9d6f7;
+  --c-music-waveform: #e2e8f8;
+
+  /* tokens shadcn (hsl) */
+  --background: 0 0% 100%;
+  --foreground: 226 67% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 226 67% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 226 67% 12%;
+  --primary: 223 100% 33%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 225 50% 95%;
+  --secondary-foreground: 226 67% 12%;
+  --muted: 225 50% 95%;
+  --muted-foreground: 225 14% 45%;
+  --accent-hsl: 225 50% 95%;
+  --accent-foreground: 226 67% 12%;
+  --input: 225 33% 90%;
+  --ring: 223 100% 33%;
+  color-scheme: light;
+}
+
+/* ---------- Escuro (PADRÃO): preto + Azul Klein + branco ---------- */
+html[data-theme="dark"],
+html.dark {
+  --bg: #0a0a0a;
+  --bg-1: #111111;
+  --bg-2: #181818;
+  --bg-3: #232323;
+  --bg-elev: #161616;
+  --border: #1f1f1f;
+  --border-strong: #2f2f2f;
+  --fg: #ffffff;
+  --fg-2: #d9d9d9;
+  --fg-3: #a6a6a6;
+  --fg-muted: #737373;
+  --hover: #1c1c1c;
+  --selected: #0c1a47;
+  --track-bg: #0a0a0a;
+  --tl-bg: #070707;
+  --waveform: #8ea6e6;
+  --stage-bg: #050505;
+  --screen-bg: #000000;
+  --control-bg: #0d0d0d;
+  --text-button-bg: #1a1a1a;
+
+  /* Klein puro (#002FA7) nos preenchimentos fortes; um Klein um pouco mais
+     claro como cor de acento para ícones/textos ficarem legíveis no preto. */
+  --accent: #2350d6;
+  --accent-strong: #002fa7;
+  --accent-soft: rgba(0, 47, 167, 0.28);
+  --accent-fg: #ffffff;
+  --accent-glow: rgba(0, 47, 167, 0.45);
+
+  --c-video: #002fa7;
+  --c-text: #3b3f8f;
+  --c-audio: #1d3a7a;
+  --c-music: #3a3a3a;
+  --c-audio-waveform: #9db4f0;
+  --c-music-waveform: #e6e6e6;
+
+  --background: 0 0% 4%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 7%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 9%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 223 100% 33%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 11%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 11%;
+  --muted-foreground: 0 0% 65%;
+  --accent-hsl: 0 0% 14%;
+  --accent-foreground: 0 0% 100%;
+  --input: 0 0% 18%;
+  --ring: 224 72% 49%;
+  color-scheme: dark;
+}
+
+/* seleção de texto na cor da marca */
+::selection {
+  background: rgba(0, 47, 167, 0.22);
+}

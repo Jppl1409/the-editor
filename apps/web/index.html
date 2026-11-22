@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#002fa7" />
+    <meta name="description" content="Professional browser-based video, audio, and photo editing application" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <link href="/fonts/google-fonts.css" rel="stylesheet" />
+    <title>The Editor — editor de vídeo com IA</title>
+  </head>
+  <body>
+    <!-- The Editor: abertura (~1,4 s). Fica no HTML para aparecer antes do app carregar e some sozinha
+         quando a animação TERMINOU e o app montou. Só anima transform/opacity (roda na placa de vídeo,
+         fica lisa mesmo com o app carregando). Peças em %, a partir do ícone 1024×1024. Só visual. -->
+    <style>
+      #te-splash { position: fixed; inset: 0; z-index: 2147483647; display: flex; align-items: center;
+        justify-content: center; background: #050505; pointer-events: none; overflow: hidden;
+        transition: opacity .42s cubic-bezier(.4,0,.2,1), transform .42s cubic-bezier(.4,0,.2,1); }
+      #te-splash.te-out { opacity: 0; transform: scale(1.015); }
+      #te-splash .te-glow { position: absolute; width: 560px; height: 560px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(0,47,167,.95) 0%, rgba(0,47,167,.35) 45%, rgba(0,47,167,0) 70%);
+        opacity: 0; will-change: transform, opacity; animation: te-glow 1.3s cubic-bezier(.16,1,.3,1) both; }
+      #te-splash .te-lockup { position: relative; display: flex; align-items: center; gap: 28px; }
+      #te-splash .te-icon { position: relative; width: 124px; height: 124px; flex: none; }
+      #te-splash .te-icon > i { position: absolute; display: block; will-change: transform, opacity; }
+      #te-splash .te-sq { left: 3.906%; top: 3.906%; width: 92.19%; height: 92.19%; border-radius: 24.4%;
+        background: #002fa7; animation: te-sq .6s cubic-bezier(.16,1,.3,1) both; }
+      #te-splash .te-play { left: 36.33%; top: 28.52%; width: 37.11%; height: 42.97%; background: #fff;
+        clip-path: polygon(0 0, 0 100%, 100% 50%); animation: te-play .5s cubic-bezier(.215,.61,.355,1) .18s both; }
+      #te-splash .te-cut { left: 29.3%; top: 56.64%; width: 55.04%; height: 3.906%; background: #002fa7;
+        transform-origin: 0 50%; animation: te-cut .42s cubic-bezier(.65,0,.35,1) .5s both; }
+      #te-splash .te-spark { left: 65.82%; top: 16.21%; width: 18.75%; height: 18.75%; background: #fff;
+        clip-path: polygon(50% 0, 57.3% 42.7%, 100% 50%, 57.3% 57.3%, 50% 100%, 42.7% 57.3%, 0 50%, 42.7% 42.7%);
+        animation: te-spark .6s cubic-bezier(.16,1,.3,1) .72s both; }
+      #te-splash .te-word { font: 600 54px/1 Inter, "Segoe UI", system-ui, sans-serif; letter-spacing: -.025em;
+        color: #fff; white-space: nowrap; will-change: transform, opacity;
+        animation: te-word .65s cubic-bezier(.16,1,.3,1) .58s both; }
+      @keyframes te-glow { 0% { opacity: 0; transform: scale(.55); } 55% { opacity: .6; } 100% { opacity: .38; transform: scale(1); } }
+      @keyframes te-sq { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+      @keyframes te-play { from { opacity: 0; transform: translateX(-60%); } to { opacity: 1; transform: none; } }
+      @keyframes te-cut { from { transform: rotate(-27.47deg) scaleX(0); } to { transform: rotate(-27.47deg) scaleX(1); } }
+      @keyframes te-spark { from { opacity: 0; transform: scale(0) rotate(-90deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+      @keyframes te-word { from { opacity: 0; transform: translateX(-22px); } to { opacity: 1; transform: none; } }
+      @media (prefers-reduced-motion: reduce) {
+        #te-splash *, #te-splash { animation-duration: .01s !important; animation-delay: 0s !important; transition-duration: .01s; }
+      }
+    </style>
+    <div id="te-splash" data-no-translate aria-hidden="true">
+      <div class="te-glow"></div>
+      <div class="te-lockup">
+        <div class="te-icon"><i class="te-sq"></i><i class="te-play"></i><i class="te-cut"></i><i class="te-spark"></i></div>
+        <span class="te-word">The Editor</span>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var s = document.getElementById("te-splash");
+        if (!s) return;
+        var t0 = Date.now();
+        var MAX = 8000; // nunca prende o app
+        var animDone = false;
+        var done = false;
+        // Some só depois que a animação terminou de verdade (não por relógio: com o app carregando, ela pode atrasar).
+        try {
+          var anims = s.getAnimations ? s.getAnimations({ subtree: true }) : [];
+          Promise.all(anims.map(function (a) { return a.finished; })).then(
+            function () { setTimeout(function () { animDone = true; }, 180); },
+            function () { animDone = true; },
+          );
+          if (!anims.length) animDone = true;
+        } catch (e) { animDone = true; }
+        function hide() {
+          if (done) return;
+          done = true;
+          s.classList.add("te-out");
+          setTimeout(function () { s.remove(); }, 460);
+        }
+        function tick() {
+          var root = document.getElementById("root");
+          var ready = root && root.children.length > 0;
+          if ((ready && animDone) || Date.now() - t0 >= MAX) hide();
+          else setTimeout(tick, 50);
+        }
+        tick();
+      })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/boot.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+name: The Editor — instaladores (Mac + Windows)
+
+# Gera os instaladores do The Editor e anexa num GitHub Release:
+#   TheEditor-<versão>-arm64.dmg  (Mac Apple Silicon)
+#   TheEditor-<versão>-x64.dmg    (Mac Intel)
+#   TheEditor-Setup-<versão>.exe  (Windows 10/11, 64 bits)
+# Sem certificados: Mac com assinatura ad-hoc (branding/mac-adhoc-sign.cjs), Windows sem assinatura.
+#
+# Rodar: aba Actions → "The Editor — instaladores" → Run workflow.
+# Links fixos para o site (sempre o release mais novo):
+#   https://github.com/<conta>/<repo>/releases/latest/download/TheEditor-<versão>-arm64.dmg
+#
+# Os workflows herdados do OpenReel (ci, release, perf-gate…) disparam em `main` e em tags `v*`;
+# aqui o branch é `the-editor` e as tags são `theeditor-v*`, então eles não rodam.
+
+on:
+  workflow_dispatch:
+    inputs:
+      publicar:
+        description: "Publicar no GitHub Release (desmarque para só gerar e baixar pelos artifacts)"
+        type: boolean
+        default: true
+
+concurrency:
+  group: the-editor-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: WebAssembly do núcleo
+        run: pnpm build:wasm
+
+      - name: FFmpeg embutido
+        run: pnpm --filter @openreel/desktop fetch:ffmpeg
+
+      - name: Interface (renderer) em modo desktop
+        run: pnpm --filter @openreel/web build
+        env:
+          OPENREEL_DESKTOP: "1"
+          NODE_OPTIONS: --max-old-space-size=6144
+
+      - name: Processo principal do Electron
+        run: pnpm --filter @openreel/desktop build:main
+
+      - name: Extensão do Claude Desktop (The Editor.mcpb)
+        run: node branding/build-mcpb.mjs
+
+      - name: Instaladores do Mac (.dmg arm64 + x64)
+        if: runner.os == 'macOS'
+        working-directory: apps/desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: pnpm exec electron-builder --mac --publish never
+
+      - name: Conferir assinatura ad-hoc do .app
+        if: runner.os == 'macOS'
+        working-directory: apps/desktop
+        run: |
+          for app in release/mac*/"The Editor.app"; do
+            echo "== $app"
+            codesign --verify --deep --strict --verbose=2 "$app"
+            codesign -dv "$app" 2>&1 | grep -E "Signature|Identifier|Format"
+          done
+          ls -la release/*.dmg
+
+      - name: Instalador do Windows (.exe)
+        if: runner.os == 'Windows'
+        working-directory: apps/desktop
+        shell: bash
+        run: |
+          unset CSC_LINK CSC_KEY_PASSWORD
+          pnpm exec electron-builder --win nsis --x64 --publish never
+          ls -la release/*.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instaladores-${{ runner.os }}
+          path: |
+            apps/desktop/release/*.dmg
+            apps/desktop/release/*.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publicar no GitHub Release
+    needs: build
+    if: ${{ !cancelled() && inputs.publicar }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+
+      - name: Criar release e anexar instaladores
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(out/*.dmg out/*.exe)
+          if [ ${#files[@]} -eq 0 ]; then echo "::error::Nenhum instalador foi gerado."; exit 1; fi
+          version=$(node -p "require('./apps/desktop/package.json').version")
+          tag="theeditor-v${version}"
+          notes=$'The Editor '"${version}"$'.\n\n'
+          notes+=$'**Mac:** baixe o `arm64` (Apple Silicon, M1 em diante) ou o `x64` (Intel). Na 1ª vez, abra o app, depois vá em Ajustes do Sistema → Privacidade e Segurança e clique em "Abrir Mesmo Assim".\n\n'
+          notes+=$'**Windows:** se aparecer "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo".'
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "${files[@]}" --clobber
+          else
+            gh release create "$tag" "${files[@]}" --target "$GITHUB_SHA" --title "The Editor ${version}" --notes "$notes" --latest
+          fi
+          gh release view "$tag" --json url,assets --jq '.url, (.assets[] | .name + "  " + .url)'
