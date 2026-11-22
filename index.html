@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Editor — editor de vídeo com IA para Windows e Mac</title>
+  <meta name="description" content="Editor de vídeo para Windows e Mac com timeline completa e IA pelo seu próprio Claude. Peça as edições em português e acompanhe tudo na timeline. Seus arquivos ficam no seu computador.">
+  <meta name="theme-color" content="#050505">
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Editor — da ideia à exportação">
+  <meta property="og:description" content="Edição manual completa + IA pelo seu próprio Claude. Para Windows e Mac.">
+  <link rel="canonical" href="https://jppl1409.github.io/the-editor/">
+  <meta property="og:url" content="https://jppl1409.github.io/the-editor/">
+  <meta property="og:image" content="https://jppl1409.github.io/the-editor/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!--
+    ================================================================
+    LINKS DOS INSTALADORES — troque SÓ estas três linhas quando escolher onde hospedar.
+    Ex. Windows:   https://github.com/<conta>/<repo>/releases/latest/download/TheEditor-Setup-1.0.0.exe
+    Ex. Mac (M1+): https://github.com/<conta>/<repo>/releases/latest/download/TheEditor-1.0.0-arm64.dmg
+    Ex. Mac Intel: https://github.com/<conta>/<repo>/releases/latest/download/TheEditor-1.0.0-x64.dmg
+    Enquanto for "#", o botão daquele sistema mostra "em breve" em vez de baixar.
+    ================================================================
+  -->
+  <meta name="download-url-windows" content="https://github.com/Jppl1409/the-editor/releases/latest/download/TheEditor-Setup-1.0.0.exe">
+  <meta name="download-url-mac" content="https://github.com/Jppl1409/the-editor/releases/latest/download/TheEditor-1.0.0-arm64.dmg">
+  <meta name="download-url-mac-intel" content="https://github.com/Jppl1409/the-editor/releases/latest/download/TheEditor-1.0.0-x64.dmg">
+
+  <style>
+    :root {
+      --bg: #050505;
+      --bg-2: #0a0a0c;
+      --card: #0d0d10;
+      --line: rgba(255,255,255,.08);
+      --line-2: rgba(255,255,255,.14);
+      --text: #ffffff;
+      --muted: #a3a3ad;
+      --dim: #6f6f7a;
+      --klein: #002fa7;
+      --klein-2: #2350d6;
+      --klein-text: #8aa4ff;
+      --radius: 16px;
+      --max: 1160px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    a { color: inherit; }
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 24px; }
+    .accent { color: var(--klein-text); }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 500; color: var(--klein-text);
+      border: 1px solid rgba(35,80,214,.45); background: rgba(0,47,167,.14);
+      padding: 6px 12px; border-radius: 999px;
+    }
+    h1, h2, h3 { margin: 0; letter-spacing: -0.03em; line-height: 1.05; }
+    h2 { font-size: clamp(30px, 4.2vw, 46px); font-weight: 700; }
+    .lead { color: var(--muted); font-size: clamp(16px, 1.6vw, 19px); max-width: 620px; }
+    section { position: relative; }
+    .section { padding: 112px 0; }
+    .section-head { max-width: 680px; margin-bottom: 52px; }
+    .section-head p { margin: 16px 0 0; }
+
+    /* ---------- botões ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      font: inherit; font-weight: 600; font-size: 16px; text-decoration: none; cursor: pointer;
+      padding: 14px 22px; border-radius: 12px; border: 1px solid transparent;
+      transition: background-color .2s ease, border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--klein); color: #fff;
+      box-shadow: 0 0 0 1px rgba(138,164,255,.25) inset, 0 10px 40px -10px rgba(35,80,214,.7);
+    }
+    .btn-primary:hover { background: var(--klein-2); transform: translateY(-1px); }
+    .btn-ghost { color: #fff; border-color: var(--line-2); background: rgba(255,255,255,.03); }
+    .btn-ghost:hover { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.06); }
+    .btn-sm { padding: 9px 14px; font-size: 14px; border-radius: 10px; }
+    .btn-lg { padding: 17px 28px; font-size: 17px; }
+    .btn svg { flex: none; }
+    .btn:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--klein-text); outline-offset: 3px; }
+
+    /* ---------- nav ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(5,5,5,.72); backdrop-filter: saturate(140%) blur(14px); -webkit-backdrop-filter: saturate(140%) blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 68px; gap: 16px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 18px; letter-spacing: -0.02em; }
+    .brand img { width: 32px; height: 32px; }
+    .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--muted); }
+    .nav-links a { text-decoration: none; transition: color .2s; }
+    .nav-links a:hover { color: #fff; }
+
+    /* ---------- hero ---------- */
+    .hero { padding: 96px 0 40px; overflow: hidden; }
+    .hero::before { /* brilho Klein */
+      content: ""; position: absolute; inset: -20% -10% auto -10%; height: 900px; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(600px 420px at 18% 18%, rgba(0,47,167,.55), transparent 70%),
+        radial-gradient(520px 380px at 85% 55%, rgba(35,80,214,.22), transparent 70%);
+    }
+    .hero::after { /* grade sutil, como na tela inicial do app */
+      content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+      background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, #000 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, #000 30%, transparent 75%);
+    }
+    .hero .wrap { position: relative; z-index: 1; }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
+    .hero h1 {
+      font-size: clamp(48px, 7.6vw, 92px); font-weight: 800; letter-spacing: -0.045em; line-height: .98;
+      margin: 24px 0 24px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(100deg, #fff 30%, var(--klein-text) 95%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 36px; }
+    .req { margin-top: 16px; font-size: 13px; color: var(--dim); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
+    .req span { display: inline; }
+    .req svg { color: var(--klein-text); vertical-align: -2px; margin-right: 7px; }
+    .req a { color: var(--muted); text-underline-offset: 3px; }
+    .req a:hover { color: #fff; }
+
+    /* logo animado do hero */
+    .hero-mark { display: flex; justify-content: center; }
+    .mark {
+      width: min(320px, 70vw); aspect-ratio: 1; position: relative;
+      filter: drop-shadow(0 30px 80px rgba(35,80,214,.55));
+    }
+    .mark svg { width: 100%; height: 100%; overflow: visible; }
+    .mark .m-sq { transform-origin: 512px 512px; animation: sq-in .9s cubic-bezier(.2,.9,.25,1.15) both; }
+    .mark .m-play { transform-origin: 512px 512px; animation: play-in .7s cubic-bezier(.2,.8,.2,1) .35s both; }
+    .mark .m-cut { transform-origin: 550px 470px; animation: cut-in .5s cubic-bezier(.6,0,.2,1) .85s both; }
+    .mark .m-spark { transform-origin: 770px 262px; animation: spark-in .6s cubic-bezier(.2,.9,.25,1.4) 1.1s both, twinkle 3.2s ease-in-out 2s infinite; }
+    @keyframes sq-in { from { opacity: 0; transform: scale(.6) rotate(-8deg); } to { opacity: 1; transform: none; } }
+    @keyframes play-in { from { opacity: 0; transform: translateX(-60px); } to { opacity: 1; transform: none; } }
+    @keyframes cut-in { from { opacity: 0; transform: scaleX(0); } to { opacity: 1; transform: none; } }
+    @keyframes spark-in { from { opacity: 0; transform: scale(0) rotate(-90deg); } to { opacity: 1; transform: none; } }
+    @keyframes twinkle { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.72); opacity: .8; } }
+
+    /* ---------- moldura de janela ---------- */
+    .shot { padding: 40px 0 0; }
+    .frame {
+      position: relative; border-radius: 14px; overflow: hidden;
+      border: 1px solid var(--line-2); background: #000;
+      box-shadow: 0 0 0 1px rgba(0,0,0,.6), 0 40px 120px -30px rgba(0,47,167,.65), 0 20px 60px -20px rgba(0,0,0,.9);
+    }
+    .frame-bar {
+      display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px;
+      background: #0b0b0e; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--dim);
+    }
+    .frame-bar img { width: 16px; height: 16px; }
+    .frame-bar span { margin-left: 2px; }
+    .shot-glow { position: relative; }
+    .shot-glow::before {
+      content: ""; position: absolute; left: 10%; right: 10%; top: 10%; bottom: -6%; z-index: -1;
+      background: radial-gradient(closest-side, rgba(0,47,167,.6), transparent); filter: blur(40px);
+    }
+    .zoom { display: block; cursor: zoom-in; }
+    .caption { text-align: center; font-size: 13px; color: var(--dim); margin-top: 16px; }
+
+    /* ---------- passos ---------- */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; }
+    .step {
+      position: relative; padding: 28px; border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)); border: 1px solid var(--line);
+    }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+      background: var(--klein); color: #fff; font-weight: 700; font-size: 15px; margin-bottom: 20px;
+      box-shadow: 0 8px 24px -8px rgba(35,80,214,.8);
+    }
+    .step h3 { font-size: 20px; font-weight: 650; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .step p { margin: 0; color: var(--muted); font-size: 15px; }
+    .step p strong { color: #fff; font-weight: 600; }
+    .kbd {
+      display: inline-block; font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap;
+      padding: 2px 8px; border-radius: 6px; background: rgba(0,47,167,.35); border: 1px solid rgba(138,164,255,.3);
+    }
+
+    /* ---------- recursos ---------- */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feat { padding: 28px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); transition: border-color .25s, transform .25s; }
+    .feat:hover { border-color: rgba(138,164,255,.35); transform: translateY(-2px); }
+    .feat-ic {
+      width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 20px;
+      background: rgba(0,47,167,.22); border: 1px solid rgba(138,164,255,.25); color: var(--klein-text);
+    }
+    .feat h3 { font-size: 18px; font-weight: 650; letter-spacing: -0.015em; margin-bottom: 8px; }
+    .feat p { margin: 0; color: var(--muted); font-size: 15px; }
+    .editor-shot { margin-top: 56px; }
+
+    /* ---------- exemplos ---------- */
+    .examples-box {
+      border-radius: 24px; border: 1px solid rgba(138,164,255,.22); padding: 56px;
+      background:
+        radial-gradient(700px 300px at 0% 0%, rgba(0,47,167,.45), transparent 70%),
+        radial-gradient(500px 300px at 100% 100%, rgba(35,80,214,.2), transparent 70%),
+        #07070a;
+      display: grid; grid-template-columns: .9fr 1.1fr; gap: 48px; align-items: center;
+    }
+    .chat { display: flex; flex-direction: column; gap: 12px; }
+    .bubble {
+      align-self: flex-start; max-width: 100%;
+      padding: 14px 18px; border-radius: 16px 16px 16px 4px;
+      background: rgba(255,255,255,.05); border: 1px solid var(--line-2); font-size: 15.5px;
+    }
+    .bubble:nth-child(even) { align-self: flex-end; border-radius: 16px 16px 4px 16px; background: rgba(0,47,167,.3); border-color: rgba(138,164,255,.3); }
+    .examples-box .note { font-size: 13px; color: var(--dim); margin-top: 18px; }
+
+    /* ---------- FAQ ---------- */
+    .faq { max-width: 820px; }
+    .faq details { border-bottom: 1px solid var(--line); }
+    .faq details:first-of-type { border-top: 1px solid var(--line); }
+    .faq summary {
+      list-style: none; cursor: pointer; padding: 22px 40px 22px 0; position: relative;
+      font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .faq summary::-webkit-details-marker { display: none; }
+    .faq summary::after {
+      content: ""; position: absolute; right: 6px; top: 50%; width: 12px; height: 12px; margin-top: -8px;
+      border-right: 2px solid var(--klein-text); border-bottom: 2px solid var(--klein-text);
+      transform: rotate(45deg); transition: transform .25s ease;
+    }
+    .faq details[open] summary::after { transform: rotate(225deg); margin-top: -2px; }
+    .faq .ans { padding: 0 0 24px; color: var(--muted); font-size: 15.5px; }
+    .faq .ans p { margin: 0 0 10px; }
+    .faq .ans strong { color: #fff; font-weight: 600; }
+    .faq .ans a { color: var(--klein-text); }
+
+    /* ---------- CTA final ---------- */
+    .final { text-align: center; padding: 120px 0 128px; overflow: hidden; }
+    .final::before {
+      content: ""; position: absolute; left: 50%; top: 50%; width: 900px; height: 500px; transform: translate(-50%, -50%);
+      background: radial-gradient(closest-side, rgba(0,47,167,.55), transparent); pointer-events: none;
+    }
+    .final .wrap { position: relative; }
+    .final img.logo { width: 72px; height: 72px; margin: 0 auto 28px; }
+    .final h2 { font-size: clamp(36px, 5.4vw, 64px); font-weight: 800; letter-spacing: -0.04em; }
+    .final .lead { margin: 18px auto 36px; }
+
+    /* ---------- rodapé ---------- */
+    footer { border-top: 1px solid var(--line); padding: 32px 0 40px; color: var(--dim); font-size: 13px; }
+    footer .wrap { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+    footer .brand { font-size: 15px; color: var(--muted); }
+    footer .brand img { width: 22px; height: 22px; }
+    footer a { color: var(--muted); }
+
+    /* ---------- aviso (link ainda não configurado) ---------- */
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 100;
+      background: #111118; border: 1px solid rgba(138,164,255,.35); color: #fff; font-size: 14px;
+      padding: 12px 18px; border-radius: 12px; box-shadow: 0 20px 60px -10px rgba(0,0,0,.8);
+      transition: opacity .25s ease, transform .25s ease; max-width: calc(100% - 32px); text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* entrada suave ao rolar */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+    .no-js .reveal { opacity: 1; transform: none; }
+
+    /* ---------- responsivo ---------- */
+    @media (max-width: 960px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 24px; }
+      .hero-mark { order: -1; justify-content: flex-start; }
+      .mark { width: 120px; }
+      .steps, .features { grid-template-columns: 1fr 1fr; }
+      .examples-box { grid-template-columns: 1fr; padding: 40px; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 640px) {
+      .wrap { padding: 0 16px; }
+      .section { padding: 80px 0; }
+      .hero { padding: 48px 0 24px; }
+      .hero h1 { margin: 20px 0; }
+      .mark { width: 96px; }
+      .hero-cta .btn { width: 100%; }
+      .steps, .features { grid-template-columns: 1fr; }
+      .step, .feat { padding: 24px; }
+      .examples-box { padding: 28px 20px; border-radius: 20px; }
+      .frame-bar { height: 28px; font-size: 11px; }
+      .nav .wrap { height: 60px; }
+      .nav .btn-sm .lbl-long { display: none; }
+      .final { padding: 88px 0 96px; }
+      .final .btn { width: 100%; }
+      .final h2 br { display: none; }
+      footer .wrap { flex-direction: column; align-items: flex-start; }
+    }
+    @media (min-width: 641px) { .nav .btn-sm .lbl-short { display: none; } }
+    @media (max-width: 640px) { .nav .btn-sm .lbl-short { display: inline; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body class="no-js">
+
+  <!-- ícone do Windows, reaproveitado nos botões -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="mac" viewBox="0 0 24 24"><path fill="currentColor" d="M16.4 12.6c0-2.4 2-3.6 2.1-3.7-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.8-1.6 0-3.1 1-4 2.4-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.4 1.2 0 1.7-.8 3.1-.8 1.5 0 1.9.8 3.2.8 1.3 0 2.1-1.2 2.9-2.4.9-1.4 1.3-2.7 1.3-2.8 0 0-2.4-1-2.4-3.9ZM14 5.5c.7-.8 1.1-1.9 1-3-1 0-2.1.6-2.8 1.4-.6.7-1.2 1.8-1 2.9 1 .1 2.1-.6 2.8-1.3Z"/></symbol>
+    <symbol id="win" viewBox="0 0 24 24"><path fill="currentColor" d="M3 5.1 10.4 4v7.2H3V5.1Zm0 13.8L10.4 20v-7.1H3v6Zm8.3 1.2L21 21.5v-8.6h-9.7v7.2Zm0-16.2v7.3H21V2.5l-9.7 1.4Z"/></symbol>
+  </svg>
+
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="#topo" aria-label="The Editor, início">
+        <img src="assets/logo.svg" alt="" width="32" height="32">
+        The Editor
+      </a>
+      <nav class="nav-links" aria-label="Seções">
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#recursos">Recursos</a>
+        <a href="#perguntas">Perguntas</a>
+      </nav>
+      <a class="btn btn-primary btn-sm" data-download="auto" href="#">
+        <svg width="16" height="16" aria-hidden="true"><use class="os-icon" href="#win"/></svg>
+        <span class="lbl-long">Baixar para <span class="os-name">Windows</span></span><span class="lbl-short">Baixar</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="topo">
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div>
+            <span class="eyebrow">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              Editor de vídeo com IA · no seu computador
+            </span>
+            <h1><span class="grad">Da ideia à<br>exportação.</span></h1>
+            <p class="lead">Edite à mão, quadro a quadro, numa timeline completa. Ou peça em português para o <strong style="color:#fff;font-weight:600">seu próprio Claude</strong> cortar, legendar e montar — e acompanhe cada passo na timeline.</p>
+            <div class="hero-cta dl-group">
+              <a class="btn btn-primary btn-lg" data-download="windows" href="#">
+                <svg width="20" height="20" aria-hidden="true"><use href="#win"/></svg>
+                Baixar para Windows
+              </a>
+              <a class="btn btn-ghost btn-lg" data-download="mac" href="#">
+                <svg width="20" height="20" aria-hidden="true"><use href="#mac"/></svg>
+                Baixar para Mac
+              </a>
+            </div>
+            <p class="req">
+              <span><svg width="14" height="14" aria-hidden="true"><use href="#win"/></svg>Windows 10/11 · 64 bits · ~125 MB</span>
+              <span><svg width="14" height="14" aria-hidden="true"><use href="#mac"/></svg>macOS 11 ou mais novo · Apple Silicon · <a data-download="mac-intel" href="#">versão para Mac Intel</a></span>
+            </p>
+          </div>
+          <div class="hero-mark" aria-hidden="true">
+            <div class="mark">
+              <svg viewBox="0 0 1024 1024">
+                <rect class="m-sq" x="40" y="40" width="944" height="944" rx="230" fill="#002fa7"/>
+                <polygon class="m-play" points="372,292 372,732 752,512" fill="#fff"/>
+                <line class="m-cut" x1="300" y1="600" x2="800" y2="340" stroke="#002fa7" stroke-width="40"/>
+                <polygon class="m-spark" points="770.0,166.0 784.1,247.9 866.0,262.0 784.1,276.1 770.0,358.0 755.9,276.1 674.0,262.0 755.9,247.9" fill="#fff"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="shot reveal">
+          <div class="shot-glow">
+            <div class="frame">
+              <a class="zoom" href="assets/app-home.webp" target="_blank" rel="noopener" aria-label="Abrir imagem em tamanho real"><img src="assets/app-home-1440.webp"
+                   srcset="assets/app-home-1440.webp 1440w, assets/app-home.webp 2880w"
+                   sizes="(max-width: 1208px) calc(100vw - 32px), 1112px"
+                   width="2880" height="1800" alt="Tela inicial do The Editor: título 'Da ideia à exportação', cartão 'Edite pelo seu Claude' com o botão 'Conectar ao meu Claude' e os formatos Vertical, Horizontal e Quadrado."></a>
+            </div>
+          </div>
+          <p class="caption">Tela inicial do app, como ela é.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= COMO FUNCIONA ================= -->
+    <section class="section" id="como-funciona">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Como funciona</h2>
+          <p class="lead">Três passos. O segundo você faz uma vez só.</p>
+        </div>
+        <div class="steps">
+          <article class="step reveal">
+            <div class="step-num">1</div>
+            <h3>Instale o The Editor</h3>
+            <p>Baixe o instalador para Windows ou Mac e abra. O app roda no seu computador e já dá para editar à mão na hora.</p>
+          </article>
+          <article class="step reveal">
+            <div class="step-num">2</div>
+            <h3>Conecte ao seu Claude</h3>
+            <p>No app, clique em <span class="kbd">Conectar ao meu Claude</span>. Ele prepara a extensão do The Editor para o <strong>Claude Desktop</strong>: é só arrastar o arquivo em Configurações → Extensões. Usa o seu plano do Claude, <strong>sem chave de API</strong>.</p>
+          </article>
+          <article class="step reveal">
+            <div class="step-num">3</div>
+            <h3>Peça e acompanhe</h3>
+            <p>Com o The Editor aberto, peça as edições no Claude, em português, do jeito que você falaria. Cada mudança aparece na timeline, e você pode continuar ajustando à mão.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RECURSOS ================= -->
+    <section class="section" id="recursos" style="padding-top:0">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Tudo de um editor de verdade.<br><span class="accent">Mais a IA do seu lado.</span></h2>
+        </div>
+        <div class="features">
+          <article class="feat reveal">
+            <div class="feat-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 10v5M15 15v5"/></svg></div>
+            <h3>Timeline completa</h3>
+            <p>Faixas de vídeo, B-roll, títulos, diálogo e música. Cortes, lâmina, efeitos, cor e áudio, com atalhos de teclado.</p>
+          </article>
+          <article class="feat reveal">
+            <div class="feat-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/><path d="M19 3v4M17 5h4"/></svg></div>
+            <h3>IA pelo seu Claude</h3>
+            <p>Peça em português pelo Claude Desktop e ele edita no app por você. Usa o seu próprio plano do Claude, sem chave de API.</p>
+          </article>
+          <article class="feat reveal">
+            <div class="feat-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 15h4M13 15h4M7 11h10"/></svg></div>
+            <h3>Transcrição e legendas</h3>
+            <p>A transcrição roda no próprio computador (Whisper). Gere legendas a partir da fala sem mandar o áudio para fora.</p>
+          </article>
+          <article class="feat reveal">
+            <div class="feat-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="7" width="10" height="7" rx="1.5"/><rect x="15" y="3" width="6" height="11" rx="1.5"/><rect x="7" y="16" width="5" height="5" rx="1"/></svg></div>
+            <h3>Formatos prontos</h3>
+            <p>Vertical 9:16 para Reels, TikTok e Shorts, horizontal 16:9 para YouTube, quadrado 1:1 e 4:5 para o feed.</p>
+          </article>
+          <article class="feat reveal">
+            <div class="feat-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div>
+            <h3>Exportação acelerada</h3>
+            <p>Exporta usando a aceleração de hardware do seu computador, para o vídeo ficar pronto mais rápido.</p>
+          </article>
+          <article class="feat reveal">
+            <div class="feat-ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+            <h3>Seus arquivos ficam com você</h3>
+            <p>Os vídeos são abertos e editados direto do seu disco. Nada é enviado para a nuvem para editar.</p>
+          </article>
+        </div>
+
+        <div class="editor-shot reveal">
+          <div class="shot-glow">
+            <div class="frame">
+              <a class="zoom" href="assets/app-editor.webp" target="_blank" rel="noopener" aria-label="Abrir imagem em tamanho real"><img src="assets/app-editor-1440.webp"
+                   srcset="assets/app-editor-1440.webp 1440w, assets/app-editor.webp 2880w"
+                   sizes="(max-width: 1208px) calc(100vw - 32px), 1112px"
+                   width="2880" height="1735" loading="lazy"
+                   alt="Editor do The Editor: biblioteca de mídia à esquerda, visualizador no centro com a escolha de formato 16:9, 9:16, 1:1 e 4:5, painel de propriedades à direita e timeline com as faixas Títulos, B-roll, Principal, Diálogo e Música."></a>
+            </div>
+          </div>
+          <p class="caption">O editor: mídia, visualizador, propriedades e timeline com faixas separadas.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= EXEMPLOS ================= -->
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="examples-box reveal">
+          <div>
+            <h2>Peça do jeito<br>que você falaria.</h2>
+            <p class="lead" style="margin-top:16px">Escreva no Claude o que quer no vídeo. Ele usa as ferramentas do The Editor e você vê cada mudança aparecer na timeline.</p>
+            <p class="note">Exemplos de pedidos. O resultado depende do seu material e do que você pedir.</p>
+          </div>
+          <div class="chat" role="list" aria-label="Exemplos de pedidos">
+            <div class="bubble" role="listitem">“No The Editor, importa o vídeo que está em Downloads.”</div>
+            <div class="bubble" role="listitem">“Corta os silêncios e as pausas longas.”</div>
+            <div class="bubble" role="listitem">“Coloca legenda em português, branca com contorno.”</div>
+            <div class="bubble" role="listitem">“Faz uma versão 9:16 com um título no começo.”</div>
+            <div class="bubble" role="listitem">“Põe a música por baixo, mais baixa que a fala, e exporta.”</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FAQ ================= -->
+    <section class="section" id="perguntas" style="padding-top:0">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <h2>Perguntas frequentes</h2>
+        </div>
+        <div class="faq reveal">
+          <details>
+            <summary>Preciso de chave de API?</summary>
+            <div class="ans"><p>Não. A IA funciona pelo <strong>Claude Desktop</strong>, o app oficial do Claude, com a sua própria conta. O The Editor vira uma extensão dele e o uso entra no seu plano do Claude. O The Editor nunca pede a sua senha do Claude.</p></div>
+          </details>
+          <details>
+            <summary>Preciso do Claude para usar o The Editor?</summary>
+            <div class="ans"><p>Só para a IA. A edição manual (timeline, cortes, textos, efeitos, áudio, exportação) funciona sem ele. Se quiser a IA, instale o <a href="https://claude.ai/download" target="_blank" rel="noopener">Claude Desktop</a> e entre com a sua conta.</p></div>
+          </details>
+          <details>
+            <summary>Como ligo o The Editor ao meu Claude?</summary>
+            <div class="ans">
+              <p>No The Editor, clique em <strong>Conectar ao meu Claude</strong>. O app salva o arquivo <strong>The Editor.mcpb</strong> na pasta Downloads, mostra onde ele está e abre o Claude.</p>
+              <p>No Claude Desktop, vá em <strong>Configurações → Extensões</strong> e arraste o arquivo para lá. Depois clique em Instalar. É uma vez só.</p>
+            </div>
+          </details>
+          <details>
+            <summary>Funciona no Mac? E no Linux?</summary>
+            <div class="ans"><p>Sim, tem versão para <strong>Windows 10 e 11 (64 bits)</strong> e para <strong>Mac com macOS 11 ou mais novo</strong> (Apple Silicon e Intel). Linux ainda não.</p></div>
+          </details>
+          <details>
+            <summary>Qual versão do Mac eu baixo?</summary>
+            <div class="ans">
+              <p>Clique no menu <strong>Apple → Sobre Este Mac</strong>. Se aparecer <strong>Chip Apple M1, M2, M3, M4</strong> (ou mais novo), use o botão <strong>Baixar para Mac</strong>. Se aparecer <strong>Processador Intel</strong>, baixe a <a href="#" data-download="mac-intel">versão para Mac Intel</a>.</p>
+            </div>
+          </details>
+          <details>
+            <summary>No Windows apareceu “O Windows protegeu o computador”. E agora?</summary>
+            <div class="ans">
+              <p>Esse aviso do Windows SmartScreen aparece porque o instalador ainda não tem assinatura digital. Para continuar, clique em <strong>Mais informações</strong> e depois em <strong>Executar assim mesmo</strong>.</p>
+            </div>
+          </details>
+          <!-- Mac sem assinatura da Apple. Se o app for assinado e notarizado (Apple Developer ID), APAGUE este item: o aviso deixa de aparecer. -->
+          <details>
+            <summary>No Mac apareceu que o app não pode ser aberto. E agora?</summary>
+            <div class="ans">
+              <p>O macOS avisa porque o app ainda não tem assinatura da Apple. Arraste o The Editor para a pasta <strong>Aplicativos</strong> e tente abrir uma vez. Depois vá em <strong>Ajustes do Sistema → Privacidade e Segurança</strong>, role até o aviso sobre o The Editor e clique em <strong>Abrir Mesmo Assim</strong>. É só na primeira vez.</p>
+            </div>
+          </details>
+          <details>
+            <summary>Meus vídeos vão para a nuvem?</summary>
+            <div class="ans">
+              <p>Não. Os arquivos são abertos e editados no seu computador, e a transcrição também roda nele.</p>
+              <p>Quando você usa a IA, o Claude recebe as suas mensagens e as respostas das ferramentas do The Editor (por exemplo, o que está na timeline). Os arquivos de vídeo continuam no seu disco.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CTA FINAL ================= -->
+    <section class="final">
+      <div class="wrap reveal">
+        <img class="logo" src="assets/logo.svg" alt="" width="72" height="72">
+        <h2>Comece o próximo vídeo <br><span class="accent">no The Editor.</span></h2>
+        <p class="lead">Edição completa à mão e IA pelo seu próprio Claude, no seu computador. Para Windows e Mac.</p>
+<div class="hero-cta dl-group" style="justify-content:center">
+              <a class="btn btn-primary btn-lg" data-download="windows" href="#">
+                <svg width="20" height="20" aria-hidden="true"><use href="#win"/></svg>
+                Baixar para Windows
+              </a>
+              <a class="btn btn-ghost btn-lg" data-download="mac" href="#">
+                <svg width="20" height="20" aria-hidden="true"><use href="#mac"/></svg>
+                Baixar para Mac
+              </a>
+            </div>
+            <p class="req" style="justify-content:center">
+              <span><svg width="14" height="14" aria-hidden="true"><use href="#win"/></svg>Windows 10/11 · 64 bits · ~125 MB</span>
+              <span><svg width="14" height="14" aria-hidden="true"><use href="#mac"/></svg>macOS 11 ou mais novo · Apple Silicon · <a data-download="mac-intel" href="#">versão para Mac Intel</a></span>
+            </p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span class="brand"><img src="assets/logo.svg" alt="" width="22" height="22">The Editor · The Founders</span>
+      <span>Baseado no <a href="https://github.com/Augani/openreel-video" target="_blank" rel="noopener">OpenReel Video</a> (licença MIT).</span>
+    </div>
+  </footer>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    document.body.classList.remove('no-js');
+
+    // Links dos instaladores: vêm das <meta name="download-url-windows|mac"> no <head>.
+    function metaUrl(n) { var m = document.querySelector('meta[name="download-url-' + n + '"]'); return (m && m.content) || '#'; }
+    var URLS = { windows: metaUrl('windows'), mac: metaUrl('mac'), 'mac-intel': metaUrl('mac-intel') };
+    var NAMES = { windows: 'Windows', mac: 'Mac', 'mac-intel': 'Mac Intel' };
+
+    // Sistema de quem visita: Mac (ou iPhone/iPad) → Mac em destaque; o resto → Windows.
+    var ua = navigator.userAgent || '';
+    var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+    var OS = /mac|iphone|ipad|ipod/i.test(plat + ' ' + ua) ? 'mac' : 'windows';
+
+    // Em cada par de botões, o do sistema detectado vai primeiro e fica azul.
+    document.querySelectorAll('.dl-group').forEach(function (g) {
+      var mine = g.querySelector('[data-download="' + OS + '"]');
+      g.querySelectorAll('[data-download]').forEach(function (b) {
+        var on = b === mine;
+        b.classList.toggle('btn-primary', on);
+        b.classList.toggle('btn-ghost', !on);
+      });
+      g.insertBefore(mine, g.firstElementChild);
+    });
+    // Botão do menu: aponta para o sistema detectado.
+    document.querySelectorAll('[data-download="auto"]').forEach(function (b) {
+      b.setAttribute('data-download', OS);
+      b.querySelector('.os-name').textContent = NAMES[OS];
+      b.querySelector('.os-icon').setAttribute('href', OS === 'mac' ? '#mac' : '#win');
+    });
+
+    var toast = document.querySelector('.toast'), toastTimer;
+    document.querySelectorAll('[data-download]').forEach(function (a) {
+      var os = a.getAttribute('data-download'), url = URLS[os];
+      if (url && url !== '#') {
+        a.href = url;
+        a.setAttribute('download', '');
+      } else {
+        a.addEventListener('click', function (e) {
+          e.preventDefault();
+          toast.textContent = 'A versão para ' + NAMES[os] + ' estará disponível em breve.';
+          toast.classList.add('show');
+          clearTimeout(toastTimer);
+          toastTimer = setTimeout(function () { toast.classList.remove('show'); }, 2600);
+        });
+      }
+    });
+
+    // Entrada suave das seções
+    var els = document.querySelectorAll('.reveal');
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+      els.forEach(function (el) { io.observe(el); });
+    } else {
+      els.forEach(function (el) { el.classList.add('in'); });
+    }
+  </script>
+</body>
+</html>
