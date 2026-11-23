@@ -1,10 +1,11 @@
-name: The Editor — instaladores (Mac + Windows)
+name: The Editor — instaladores (Mac + Windows + Linux)
 
 # Gera os instaladores do The Editor e publica um GitHub Release novo (theeditor-v<versão>):
 #   TheEditor-arm64.dmg     (Mac Apple Silicon)
 #   TheEditor-x64.dmg       (Mac Intel)
 #   TheEditor-Setup.exe     (Windows 10/11, 64 bits) + .blockmap
-#   latest.yml              (o app confere aqui se há versão nova — botão "Verificar atualizações")
+#   TheEditor.AppImage      (Linux 64 bits, qualquer distro)
+#   latest.yml / latest-linux.yml (o app confere aqui se há versão nova — botão "Verificar atualizações")
 # Sem certificados: Mac com assinatura ad-hoc (branding/mac-adhoc-sign.cjs), Windows sem assinatura.
 #
 # Rodar: aba Actions → "The Editor — instaladores" → Run workflow. A versão sobe sozinha
@@ -67,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-latest, windows-latest, ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -132,6 +133,13 @@ jobs:
           pnpm exec electron-builder --win nsis --x64 --publish never
           ls -la release/*.exe
 
+      - name: Instalador do Linux (.AppImage)
+        if: runner.os == 'Linux'
+        working-directory: apps/desktop
+        run: |
+          pnpm exec electron-builder --linux AppImage --x64 --publish never
+          ls -la release/*.AppImage release/latest-linux.yml
+
       - uses: actions/upload-artifact@v4
         with:
           name: instaladores-${{ runner.os }}
@@ -140,6 +148,8 @@ jobs:
             apps/desktop/release/*.exe
             apps/desktop/release/*.exe.blockmap
             apps/desktop/release/latest.yml
+            apps/desktop/release/*.AppImage
+            apps/desktop/release/latest-linux.yml
           if-no-files-found: error
           retention-days: 14
 
@@ -164,14 +174,17 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          files=(out/*.dmg out/*.exe out/*.blockmap out/latest.yml)
+          files=(out/*.dmg out/*.exe out/*.blockmap out/*.AppImage out/latest.yml out/latest-linux.yml)
           if [ ${#files[@]} -eq 0 ]; then echo "::error::Nenhum instalador foi gerado."; exit 1; fi
           version="${{ needs.versao.outputs.version }}"
           [ -f out/latest.yml ] || { echo "::error::Faltou o latest.yml (sem ele o app não acha a atualização)."; exit 1; }
           tag="theeditor-v${version}"
           notes=$'The Editor '"${version}"$'.\n\n'
           notes+=$'**Mac:** baixe o `arm64` (Apple Silicon, M1 em diante) ou o `x64` (Intel). Na 1ª vez, abra o app, depois vá em Ajustes do Sistema → Privacidade e Segurança e clique em "Abrir Mesmo Assim".\n\n'
-          notes+=$'**Windows:** se aparecer "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo".'
+          notes+=$'**Windows:** se aparecer "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo".
+
+'
+          notes+=$'**Linux:** baixe o `TheEditor.AppImage`, marque "Permitir executar como programa" (ou `chmod +x TheEditor.AppImage`) e abra.'
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "${files[@]}" --clobber
           else

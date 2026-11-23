@@ -88,11 +88,15 @@ nsis:
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
   uninstallDisplayName: The Editor
+# The Editor: Linux só em AppImage (um arquivo, roda em qualquer distro e se atualiza pelo
+# botão "Verificar atualizações"). Nome sem versão, como os outros.
 linux:
   icon: build/icon.png
+  executableName: the-editor
+  artifactName: TheEditor.${ext}
+  synopsis: Editor de vídeo com IA
+  description: The Editor — editor de vídeo com IA.
   target:
     - target: AppImage
-      arch: [x64]
-    - target: deb
       arch: [x64]
   category: AudioVideo
