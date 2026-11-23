@@ -1,7 +1,8 @@
 appId: br.com.tfounders.theeditor
 productName: The Editor
 copyright: "The Editor — baseado no OpenReel Video (MIT) © Augustus Otu e colaboradores"
-artifactName: TheEditor-Setup-${version}.${ext}
+# Nomes sem versão: o link `releases/latest/download/<arquivo>` do site nunca muda.
+artifactName: TheEditor-Setup.${ext}
 asar: true
 # The MCP stdio shim must be a real on-disk file so external clients (Claude
 # Desktop / Cursor / Cline) can spawn it with `node`; unpack it from the asar.
@@ -9,8 +10,12 @@ asarUnpack:
   - dist/mcp-shim/**
 directories:
   output: release
-# The Editor: sem feed de atualização (o do OpenReel trocaria o app pelo original).
-publish: null
+# The Editor: feed de atualização = release mais novo do GitHub. Com isto o build gera o
+# latest.yml (versão + instalador) que o workflow anexa ao release e o app confere
+# (apps/desktop/src/main/updater.ts usa a mesma URL).
+publish:
+  provider: generic
+  url: https://github.com/Jppl1409/the-editor/releases/latest/download
 files:
   - dist/**/*
   - "!**/*.map"
@@ -53,7 +58,7 @@ mac:
   category: public.app-category.video
   icon: build/icon.png
   # Um .dmg por arquitetura (Apple Silicon e Intel), cada um com o próprio nome.
-  artifactName: TheEditor-${version}-${arch}.${ext}
+  artifactName: TheEditor-${arch}.${ext}
   target:
     - target: dmg
       arch: [arm64, x64]

@@ -6,6 +6,7 @@ import {
   lazy,
   Suspense,
 } from "react";
+import { UpdateCheckButton } from "../../desktop/UpdateCheckButton";
 import {
   Clock,
   Layers,
@@ -360,6 +361,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ initialTab }) => {
                 <FolderOpen size={15} aria-hidden />
                 <span className="truncate">Open editor</span>
               </Button>
+              <UpdateCheckButton className={navButton} />
             </nav>
           </header>
 

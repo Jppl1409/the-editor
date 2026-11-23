@@ -77,6 +77,8 @@ export const CHANNELS = {
   updaterStatus: "openreel:updater:status",
   updaterDownload: "openreel:updater:download",
   updaterInstall: "openreel:updater:install",
+  updaterCheck: "openreel:updater:check",
+  updaterOpenDownload: "openreel:updater:openDownload",
   crashReport: "openreel:crash:report",
   mcpRequest: "openreel:mcp:request",
   mcpResponse: "openreel:mcp:response",

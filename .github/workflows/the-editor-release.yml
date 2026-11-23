@@ -1,14 +1,16 @@
 name: The Editor — instaladores (Mac + Windows)
 
-# Gera os instaladores do The Editor e anexa num GitHub Release:
-#   TheEditor-<versão>-arm64.dmg  (Mac Apple Silicon)
-#   TheEditor-<versão>-x64.dmg    (Mac Intel)
-#   TheEditor-Setup-<versão>.exe  (Windows 10/11, 64 bits)
+# Gera os instaladores do The Editor e publica um GitHub Release novo (theeditor-v<versão>):
+#   TheEditor-arm64.dmg     (Mac Apple Silicon)
+#   TheEditor-x64.dmg       (Mac Intel)
+#   TheEditor-Setup.exe     (Windows 10/11, 64 bits) + .blockmap
+#   latest.yml              (o app confere aqui se há versão nova — botão "Verificar atualizações")
 # Sem certificados: Mac com assinatura ad-hoc (branding/mac-adhoc-sign.cjs), Windows sem assinatura.
 #
-# Rodar: aba Actions → "The Editor — instaladores" → Run workflow.
-# Links fixos para o site (sempre o release mais novo):
-#   https://github.com/<conta>/<repo>/releases/latest/download/TheEditor-<versão>-arm64.dmg
+# Rodar: aba Actions → "The Editor — instaladores" → Run workflow. A versão sobe sozinha
+# (1.0.1 → 1.0.2); para escolher, preencha o campo "versao".
+# Links fixos para o site (sempre o release mais novo, nomes sem versão):
+#   https://github.com/<conta>/<repo>/releases/latest/download/TheEditor-Setup.exe
 #
 # Os workflows herdados do OpenReel (ci, release, perf-gate…) disparam em `main` e em tags `v*`;
 # aqui o branch é `the-editor` e as tags são `theeditor-v*`, então eles não rodam.
@@ -17,6 +19,10 @@ name: The Editor — instaladores (Mac + Windows)
 on:
   workflow_dispatch:
     inputs:
+      versao:
+        description: "Versão (ex.: 1.2.0). Em branco = sobe a última (1.0.1 → 1.0.2)"
+        type: string
+        default: ""
       publicar:
         description: "Publicar no GitHub Release (desmarque para só gerar e baixar pelos artifacts)"
         type: boolean
@@ -30,8 +36,32 @@ permissions:
   contents: read
 
 jobs:
+  versao:
+    name: Definir versão
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PEDIDA: ${{ inputs.versao }}
+    steps:
+      - id: v
+        run: |
+          set -euo pipefail
+          if [ -n "$PEDIDA" ]; then
+            version="${PEDIDA#v}"
+          else
+            last=$(gh release list -R "$GITHUB_REPOSITORY" --limit 50 --json tagName --jq '[.[].tagName | select(startswith("theeditor-v")) | ltrimstr("theeditor-v")] | sort_by(split(".") | map(tonumber? // 0)) | last // ""')
+            if [ -z "$last" ]; then version="1.0.0"; else
+              IFS=. read -r a b c <<< "$last"; version="$a.$b.$((c + 1))"; fi
+          fi
+          echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::Versão inválida: $version"; exit 1; }
+          echo "Versão: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build (${{ matrix.os }})
+    needs: versao
     runs-on: ${{ matrix.os }}
     timeout-minutes: 75
     strategy:
@@ -50,6 +80,12 @@ jobs:
 
       - name: Dependências
         run: pnpm install --frozen-lockfile
+
+      - name: Versão ${{ needs.versao.outputs.version }}
+        shell: bash
+        run: |
+          node -e "const f='apps/desktop/package.json';const p=JSON.parse(require('fs').readFileSync(f,'utf8'));p.version='${{ needs.versao.outputs.version }}';require('fs').writeFileSync(f,JSON.stringify(p,null,2))"
+          node -p "require('./apps/desktop/package.json').version"
 
       - name: WebAssembly do núcleo
         run: pnpm build:wasm
@@ -102,13 +138,15 @@ jobs:
           path: |
             apps/desktop/release/*.dmg
             apps/desktop/release/*.exe
+            apps/desktop/release/*.exe.blockmap
+            apps/desktop/release/latest.yml
           if-no-files-found: error
           retention-days: 14
 
   release:
     name: Publicar no GitHub Release
-    needs: build
-    if: ${{ !cancelled() && inputs.publicar }}
+    needs: [versao, build]
+    if: ${{ !cancelled() && needs.build.result == 'success' && inputs.publicar }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -126,9 +164,10 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          files=(out/*.dmg out/*.exe)
+          files=(out/*.dmg out/*.exe out/*.blockmap out/latest.yml)
           if [ ${#files[@]} -eq 0 ]; then echo "::error::Nenhum instalador foi gerado."; exit 1; fi
-          version=$(node -p "require('./apps/desktop/package.json').version")
+          version="${{ needs.versao.outputs.version }}"
+          [ -f out/latest.yml ] || { echo "::error::Faltou o latest.yml (sem ele o app não acha a atualização)."; exit 1; }
           tag="theeditor-v${version}"
           notes=$'The Editor '"${version}"$'.\n\n'
           notes+=$'**Mac:** baixe o `arm64` (Apple Silicon, M1 em diante) ou o `x64` (Intel). Na 1ª vez, abra o app, depois vá em Ajustes do Sistema → Privacidade e Segurança e clique em "Abrir Mesmo Assim".\n\n'

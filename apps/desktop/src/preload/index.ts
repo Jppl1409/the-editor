@@ -205,6 +205,8 @@ contextBridge.exposeInMainWorld("openreel", {
     },
     download: () => ipcRenderer.invoke(CHANNELS.updaterDownload),
     install: () => ipcRenderer.invoke(CHANNELS.updaterInstall),
+    check: () => ipcRenderer.invoke(CHANNELS.updaterCheck),
+    openDownload: () => ipcRenderer.invoke(CHANNELS.updaterOpenDownload),
   },
   crash: {
     // Fire-and-forget renderer error reporting; the main process attaches app

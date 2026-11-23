@@ -10017,5 +10017,13 @@
  "Zoom Transition": "Transição de zoom",
  "Zoom transition between clips": "Transição de zoom entre clipes",
  "Zoom-blurs the layer outward from a center point.": "Desfoca a camada em zoom para fora a partir de um ponto central.",
- "Zoom-style radial motion": "Movimento radial estilo zoom"
+ "Zoom-style radial motion": "Movimento radial estilo zoom",
+ "Check for updates": "Verificar atualizações",
+ "Checking…": "Verificando…",
+ "Update to {0}": "Atualizar para {0}",
+ "Downloading update… {0}%": "Baixando atualização… {0}%",
+ "Restart to update": "Reiniciar e atualizar",
+ "Download version {0}": "Baixar versão {0}",
+ "Could not check. Try again": "Não deu para verificar. Tentar de novo",
+ "You have the latest version": "Você já tem a versão mais nova"
 }

@@ -349,6 +349,7 @@ export type OpenReelUpdaterStatus =
   | { state: "none" }
   | { state: "downloading"; percent: number }
   | { state: "downloaded"; version: string }
+  | { state: "manual"; version: string; url: string }
   | { state: "error"; message: string };
 
 export interface OpenReelIngestFolders {
@@ -668,6 +669,8 @@ declare global {
         onStatus(cb: (status: OpenReelUpdaterStatus) => void): () => void;
         download(): Promise<void>;
         install(): Promise<void>;
+        check?(): Promise<void>;
+        openDownload?(): Promise<void>;
       };
       crash: {
         report(payload: { message: string; stack?: string; type?: string; context?: unknown }): void;
