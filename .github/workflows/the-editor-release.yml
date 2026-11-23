@@ -181,9 +181,7 @@ jobs:
           tag="theeditor-v${version}"
           notes=$'The Editor '"${version}"$'.\n\n'
           notes+=$'**Mac:** baixe o `arm64` (Apple Silicon, M1 em diante) ou o `x64` (Intel). Na 1ª vez, abra o app, depois vá em Ajustes do Sistema → Privacidade e Segurança e clique em "Abrir Mesmo Assim".\n\n'
-          notes+=$'**Windows:** se aparecer "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo".
-
-'
+          notes+=$'**Windows:** se aparecer "O Windows protegeu o computador", clique em "Mais informações" → "Executar assim mesmo".\n\n'
           notes+=$'**Linux:** baixe o `TheEditor.AppImage`, marque "Permitir executar como programa" (ou `chmod +x TheEditor.AppImage`) e abra.'
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release upload "$tag" "${files[@]}" --clobber
