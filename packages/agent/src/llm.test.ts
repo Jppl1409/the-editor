@@ -29,8 +29,18 @@ describe("Anthropic normalization", () => {
     };
     expect(body.system).toBe("sys");
     expect(body.max_tokens).toBe(1024);
+    expect((body as { cache_control?: unknown }).cache_control).toEqual({ type: "ephemeral" });
     expect(body.messages[1].content.some((b) => b.type === "tool_use")).toBe(true);
     expect(body.messages[2].content[0].type).toBe("tool_result");
+  });
+
+  it("counts cached input tokens in the Anthropic usage total", () => {
+    const parsed = parseAnthropicResponse({
+      content: [{ type: "text", text: "ok" }],
+      stop_reason: "end_turn",
+      usage: { input_tokens: 50, cache_creation_input_tokens: 2000, cache_read_input_tokens: 8000, output_tokens: 30 },
+    });
+    expect(parsed.usage).toEqual({ inputTokens: 10050, outputTokens: 30 });
   });
 
   it("parses a tool-use response", () => {

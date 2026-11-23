@@ -237,6 +237,9 @@ export function buildAnthropicBody(
   return {
     model,
     max_tokens: maxTokens,
+    // Cache automático: a cada volta do agente, ferramentas + sistema + histórico já enviados
+    // são lidos do cache (~10% do preço da entrada) em vez de cobrados de novo.
+    cache_control: { type: "ephemeral" },
     ...(input.system ? { system: input.system } : {}),
     messages,
     tools: input.tools,
@@ -249,7 +252,12 @@ export function parseAnthropicResponse(raw: unknown): LLMResponse {
   const r = raw as {
     content?: string | Array<{ type?: string; text?: string; id?: string; name?: string; input?: unknown }>;
     stop_reason?: string;
-    usage?: { input_tokens?: number; output_tokens?: number };
+    usage?: {
+      input_tokens?: number;
+      output_tokens?: number;
+      cache_creation_input_tokens?: number;
+      cache_read_input_tokens?: number;
+    };
   };
   let text = typeof r.content === "string" ? r.content : "";
   const toolUses: LLMToolUse[] = [];
@@ -274,7 +282,12 @@ export function parseAnthropicResponse(raw: unknown): LLMResponse {
         : "end_turn";
   const usage = r.usage
     ? {
-        inputTokens: tokenCount(r.usage.input_tokens),
+        // Com cache, input_tokens traz só a parte nova; soma as partes do cache para o total
+        // (e o limite de tokens do loop) continuarem contando tudo que o modelo leu.
+        inputTokens:
+          tokenCount(r.usage.input_tokens) +
+          tokenCount(r.usage.cache_creation_input_tokens) +
+          tokenCount(r.usage.cache_read_input_tokens),
         outputTokens: tokenCount(r.usage.output_tokens),
       }
     : undefined;
