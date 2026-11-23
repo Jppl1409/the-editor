@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { StoreApi } from "zustand";
 import type { Action, ActionResult } from "@openreel/core";
 import {
+  resolveMediaPlacement,
   resolveTimelineItem,
   resolveTimelinePlacement,
   withUniversalTracksCapability,
@@ -66,34 +67,15 @@ export function createTimelineItemSlice(
 
       const mediaLength = mediaDisplayDuration(mediaItem);
       const duration = mediaLength > 0 ? mediaLength : 5;
-      const newTrackId = uuidv4();
-      const placement = targetTrackId
-        ? resolveTimelinePlacement(project, {
-            targetTrackId,
-            startTime,
-            duration,
-            policy: "stack-above",
-            newTrackId,
-          })
-        : {
-            ok: true as const,
-            trackId: newTrackId,
-            startTime: Math.max(0, startTime),
-            createdTrack: {
-              id: newTrackId,
-              position: project.timeline.tracks.length,
-            },
-          };
-
-      if (!placement.ok) {
-        if (placement.reason === "track-not-found") {
-          return failure("TRACK_NOT_FOUND", "Destination track not found");
-        }
-        if (placement.reason === "track-locked") {
-          return failure("TRACK_LOCKED", "Destination track is locked");
-        }
-        return failure("OVERLAP_DETECTED", "The destination interval is occupied");
-      }
+      // The Editor: cada mídia vai para a trilha do seu tipo (vídeo/imagem → vídeo, áudio → áudio),
+      // mesmo que seja solta em outra trilha ou fora delas.
+      const placement = resolveMediaPlacement(project, {
+        mediaType: mediaItem.type,
+        targetTrackId,
+        startTime,
+        duration,
+        newTrackId: uuidv4(),
+      });
 
       const actions: Action[] = [];
       if (placement.createdTrack) {
@@ -102,7 +84,7 @@ export function createTimelineItemSlice(
           id: uuidv4(),
           timestamp: Date.now(),
           params: {
-            trackType: "video",
+            trackType: placement.createdTrack.type,
             trackId: placement.createdTrack.id,
             position: placement.createdTrack.position,
             mode: "standard",

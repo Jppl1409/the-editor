@@ -228,8 +228,10 @@ export const TrackLane: React.FC<TrackLaneProps> = React.memo(function TrackLane
       setIsDragOver(false);
       setDropHint("Drop to add clip");
 
-      // External OS file drop (e.g. from Windows Explorer)
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // External OS file drop (e.g. from Windows Explorer). A drag from the media bin also
+      // carries the thumbnail as an image file; its JSON payload wins so the real media is placed.
+      const fromApp = Array.from(e.dataTransfer.types ?? []).includes("application/json");
+      if (!fromApp && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         const rect = laneRef.current?.getBoundingClientRect();
         if (!rect) return;
         const x = e.clientX - rect.left;
@@ -255,7 +257,10 @@ export const TrackLane: React.FC<TrackLaneProps> = React.memo(function TrackLane
                 .project.mediaLibrary.items.find(i => !beforeIds.has(i.id));
               if (newItem) {
                 await placeMediaClip(newItem.id, track.id, snapResult.time);
-                toast.success(`Added to ${track.name}`, file.name);
+                const placedOn = useProjectStore
+                  .getState()
+                  .project.timeline.tracks.find((t) => t.clips.some((c) => c.mediaId === newItem.id));
+                if (placedOn) toast.success(`Added to ${placedOn.name}`, file.name);
               }
             }
           } catch (err) {

@@ -1676,8 +1676,10 @@ export const Timeline: React.FC<{ onOpenMedia?: () => void }> = ({ onOpenMedia }
                 }
               }
 
-              // External OS file drop (e.g. from Windows Explorer)
-              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              // External OS file drop (e.g. from Windows Explorer). A drag from the media bin also
+              // carries the thumbnail as an image file; its JSON payload wins so the real media is placed.
+              const fromApp = Array.from(e.dataTransfer.types ?? []).includes("application/json");
+              if (!fromApp && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 const { importMedia, placeMediaClip } = useProjectStore.getState();
                 for (const file of Array.from(e.dataTransfer.files)) {
                   try {

@@ -124,3 +124,62 @@ export function resolveTimelinePlacement(
     createdTrack: { id: newTrackId, position: targetIndex },
   };
 }
+
+/**
+ * The Editor: escolhe a trilha certa para uma mídia solta na timeline.
+ * Áudio vai para trilha de áudio; vídeo e imagem vão para trilha de vídeo (imagem também aceita
+ * trilha de imagem). Tenta primeiro a trilha onde soltou, depois as outras do mesmo tipo que
+ * estiverem livres naquele trecho; se nenhuma servir, cria uma trilha nova do tipo certo.
+ */
+export function resolveMediaPlacement(
+  project: Project,
+  request: {
+    readonly mediaType: "video" | "audio" | "image";
+    readonly targetTrackId?: string;
+    readonly startTime: number;
+    readonly duration: number;
+    readonly newTrackId: string;
+  },
+): {
+  readonly trackId: string;
+  readonly startTime: number;
+  readonly createdTrack?: {
+    readonly id: string;
+    readonly position: number;
+    readonly type: "video" | "audio";
+  };
+} {
+  const tracks = project.timeline.tracks;
+  const startTime = Math.max(0, request.startTime);
+  const wantedType = request.mediaType === "audio" ? "audio" : "video";
+  const fits = (type: string) =>
+    type === wantedType || (request.mediaType === "image" && type === "image");
+  const requested = tracks.find((track) => track.id === request.targetTrackId);
+  // Vídeo: da trilha de baixo (a principal) para cima. Áudio: de cima para baixo.
+  const sameType = tracks.filter((track) => track !== requested && fits(track.type));
+  if (wantedType === "video") sameType.reverse();
+  const candidates = [
+    ...(requested && fits(requested.type) ? [requested] : []),
+    ...sameType,
+  ];
+  for (const track of candidates) {
+    if (!track.locked && isTimelineIntervalClear(project, track.id, startTime, request.duration)) {
+      return { trackId: track.id, startTime };
+    }
+  }
+  // Nova trilha: vídeo fica acima das trilhas de vídeo; áudio vai depois da última de áudio.
+  let position: number;
+  if (wantedType === "video") {
+    const firstVideo = tracks.findIndex((track) => fits(track.type));
+    position = firstVideo >= 0 ? firstVideo : 0;
+  } else {
+    let lastAudio = -1;
+    tracks.forEach((track, index) => { if (track.type === "audio") lastAudio = index; });
+    position = lastAudio >= 0 ? lastAudio + 1 : tracks.length;
+  }
+  return {
+    trackId: request.newTrackId,
+    startTime,
+    createdTrack: { id: request.newTrackId, position, type: wantedType },
+  };
+}
