@@ -252,9 +252,9 @@ export const TrackLane: React.FC<TrackLaneProps> = React.memo(function TrackLane
             );
             const result = await importMedia(file);
             if (result.success) {
-              const newItem = useProjectStore
-                .getState()
-                .project.mediaLibrary.items.find(i => !beforeIds.has(i.id));
+              // O id que o import devolve; o "item novo" por diferença erra quando dois arquivos chegam juntos.
+              const items = useProjectStore.getState().project.mediaLibrary.items;
+              const newItem = items.find(i => i.id === result.actionId) ?? items.find(i => !beforeIds.has(i.id));
               if (newItem) {
                 await placeMediaClip(newItem.id, track.id, snapResult.time);
                 const placedOn = useProjectStore

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
-import { MoreHorizontal, Trash2, Pencil, AlignLeft, Link2, Unlink, RefreshCw } from "@/icons/lucide-compat";
+import { MoreHorizontal, Trash2, Pencil, AlignLeft, Link2, Unlink, RefreshCw, Eye, EyeOff, Volume2, VolumeX, Lock, LockOpen } from "@/icons/lucide-compat";
 import {
   Button, Input, ContextMenu, ContextMenuTrigger, ContextMenuContent,
   ContextMenuItem, ContextMenuCheckboxItem, ContextMenuLabel, ContextMenuSeparator,
@@ -32,6 +32,8 @@ interface TrackHeaderProps {
   keyframeCount?: number;
   active?: boolean;
   audioDivider?: boolean;
+  /** The Editor: timeline simples — só nome + esconder/silenciar + travar. */
+  simple?: boolean;
 }
 
 export const TrackHeader: React.FC<TrackHeaderProps> = React.memo(function TrackHeader({
@@ -43,6 +45,7 @@ export const TrackHeader: React.FC<TrackHeaderProps> = React.memo(function Track
   onDragEnd,
   active = false,
   audioDivider = false,
+  simple = false,
 }) {
   const compact = useCompactEditor();
   const {
@@ -222,7 +225,7 @@ export const TrackHeader: React.FC<TrackHeaderProps> = React.memo(function Track
           track.locked ? "bg-bg-2/50" : "bg-bg-1"
         }`}
       >
-          {targetKind ? (
+          {simple ? null : targetKind ? (
             <button
               type="button"
               className="workspace-track-badge"
@@ -289,7 +292,34 @@ export const TrackHeader: React.FC<TrackHeaderProps> = React.memo(function Track
               <DropdownMenuSeparator />{trackActions("dropdown")}
             </DropdownMenuContent>
           </DropdownMenu>}
-          <div hidden={compact} className="workspace-track-controls flex items-center gap-2.5 shrink-0">
+          {simple && !compact && (
+            <div className="workspace-track-controls flex items-center gap-2 shrink-0" data-simple-track-controls>
+              {isVisual && (
+                <Button variant="ghost" size="icon-sm" type="button"
+                  aria-label={track.hidden ? "Show track" : "Hide track"}
+                  title={track.hidden ? "Show track" : "Hide track"}
+                  className={`h-6 w-6 [&_svg]:size-[14px] ${track.hidden ? "text-fg-2" : "text-fg-muted hover:text-fg-2"}`}
+                  onClick={(e) => { e.stopPropagation(); void hideTrack(track.id, !track.hidden); }}
+                >{track.hidden ? <EyeOff aria-hidden /> : <Eye aria-hidden />}</Button>
+              )}
+              {isAudio && (
+                <Button variant="ghost" size="icon-sm" type="button"
+                  aria-label={track.muted ? `Unmute ${track.name}` : `Mute ${track.name}`}
+                  aria-pressed={track.muted}
+                  title={track.muted ? "Unmute track" : "Mute track"}
+                  className={`h-6 w-6 [&_svg]:size-[14px] ${track.muted ? "text-destructive" : "text-fg-muted hover:text-fg-2"}`}
+                  onClick={(e) => { e.stopPropagation(); void muteTrack(track.id, !track.muted); }}
+                >{track.muted ? <VolumeX aria-hidden /> : <Volume2 aria-hidden />}</Button>
+              )}
+              <Button variant="ghost" size="icon-sm" type="button"
+                aria-label={track.locked ? "Unlock" : "Lock"}
+                title={track.locked ? "Unlock track" : "Lock track"}
+                className={`h-6 w-6 [&_svg]:size-[14px] ${track.locked ? "text-fg-2" : "text-fg-muted hover:text-fg-2"}`}
+                onClick={(e) => { e.stopPropagation(); void lockTrack(track.id, !track.locked); }}
+              >{track.locked ? <Lock aria-hidden /> : <LockOpen aria-hidden />}</Button>
+            </div>
+          )}
+          <div hidden={compact || simple} className="workspace-track-controls flex items-center gap-2.5 shrink-0">
             {track.groupId && (
               <Link2
                 size={13}

@@ -5,6 +5,7 @@ import { StrictMode, useRef } from "react";
 import type { Clip, MediaItem, Track } from "@openreel/core";
 import { ClipComponent } from "./ClipComponent";
 import { createEmptyProject } from "../../../stores/project/project-helpers";
+import { useSettingsStore } from "../../../stores/settings-store";
 import { useProjectStore } from "../../../stores/project-store";
 import { useUIStore } from "../../../stores/ui-store";
 import { useTimelineStore } from "../../../stores/timeline-store";
@@ -102,6 +103,8 @@ describe("native clip pointer ordering", () => {
   });
   it.each([false, true])("undoes a cross-track drop and its timing together with linked audio=%s", async linked => {
     useEditorWorkspaceStore.setState({ linkedSelection: linked });
+    // Arrastar para uma trilha vazia abaixo da principal é da timeline completa (a simples a esconde).
+    useSettingsStore.setState({ simpleTimeline: false });
     useTimelineStore.setState({ pixelsPerSecond: 50, scrollX: 0, scrollY: 0, playheadPosition: 0, viewportWidth: 1000, viewportHeight: 200 });
     useUIStore.setState({ snapSettings: { ...useUIStore.getState().snapSettings, enabled: false } });
     const project = useProjectStore.getState().project;

@@ -32,7 +32,7 @@ function PreferenceText({ label, value, onChange, placeholder }: { label: string
 export function GeneralPanel() {
   const preferences = useSettingsStore(useShallow(state => ({ autoSave: state.autoSave, autoSaveInterval: state.autoSaveInterval,
     defaultTtsProvider: state.defaultTtsProvider, defaultLlmProvider: state.defaultLlmProvider, llmBaseUrl: state.llmBaseUrl,
-    llmModel: state.llmModel, defaultAggregator: state.defaultAggregator, defaultAudioChannels: state.defaultAudioChannels, configuredServices: state.configuredServices })));
+    llmModel: state.llmModel, defaultAggregator: state.defaultAggregator, defaultAudioChannels: state.defaultAudioChannels, configuredServices: state.configuredServices, simpleTimeline: state.simpleTimeline })));
   const project = useProjectStore(state => state.project.settings);
   const projectId = useProjectStore(state => state.project.id);
   const backgroundFillMode = useProjectStore(state => state.project.timeline.backgroundFillMode);
@@ -42,7 +42,7 @@ export function GeneralPanel() {
   const [draftWidth, setDraftWidth] = useState(String(project.width));
   const [draftHeight, setDraftHeight] = useState(String(project.height));
   const [scaleGraphics, setScaleGraphics] = useState(true);
-  const widthId = useId(), heightId = useId(), autoSaveId = useId();
+  const widthId = useId(), heightId = useId(), autoSaveId = useId(), simpleTimelineId = useId();
   useEffect(() => { setDraftWidth(String(project.width)); setDraftHeight(String(project.height)); }, [projectId, project.width, project.height]);
   const applyDimensions = useCallback(async (width: number, height: number) => {
     if (![width, height].every(Number.isFinite) || width <= 0 || height <= 0) return;
@@ -52,6 +52,10 @@ export function GeneralPanel() {
   const aggregatorProviders = SERVICE_REGISTRY.filter(service => service.id === "kie-ai" || service.id === "freepik" || preferences.configuredServices.includes(service.id));
   return <div className="space-y-5 pb-1 text-xs">
     <LanguageSection />
+    <hr className="border-border" />
+    <section className="space-y-3" aria-labelledby="timeline-settings-heading"><h3 id="timeline-settings-heading" className="text-sm font-medium">Timeline</h3>
+      <div className="flex items-center justify-between gap-3"><div><Label htmlFor={simpleTimelineId} className="text-xs">Simple timeline</Label><p id={`${simpleTimelineId}-description`} className="mt-1 text-[11px] leading-4 text-fg-2">Shows only the main track and the tracks in use, with just hide, mute and lock buttons.</p></div><Switch id={simpleTimelineId} aria-describedby={`${simpleTimelineId}-description`} checked={preferences.simpleTimeline} onCheckedChange={value => useSettingsStore.getState().setSimpleTimeline(value)} /></div>
+    </section>
     <hr className="border-border" />
     <section className="space-y-3" aria-labelledby="composition-settings-heading">
       <div><h3 id="composition-settings-heading" className="text-sm font-medium">Project Composition</h3><p className="mt-1 text-xs leading-5 text-fg-2">Set the canvas dimensions for your project. Pick a preset for TikTok, Reels, YouTube, or enter custom values.</p></div>

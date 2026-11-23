@@ -68,6 +68,8 @@ interface SettingsState {
   audioOutputDeviceLabel: string;
   /** Modify > Audio Channels default for newly imported files with audio. */
   defaultAudioChannels: ChannelPreset;
+  /** The Editor: timeline simples (esconde trilhas vazias e controles avançados das trilhas). */
+  simpleTimeline: boolean;
 
   // AI/Service preferences
   defaultTtsProvider: TtsProvider;
@@ -103,6 +105,7 @@ interface SettingsState {
   setLanguage: (lang: string) => void;
   setAudioOutputDevice: (deviceId: string, label?: string) => void;
   setDefaultAudioChannels: (preset: ChannelPreset) => void;
+  setSimpleTimeline: (enabled: boolean) => void;
   setDefaultTtsProvider: (provider: TtsProvider) => void;
   setDefaultLlmProvider: (provider: LlmProvider | null) => void;
   setLlmBaseUrl: (url: string) => void;
@@ -135,6 +138,7 @@ export const useSettingsStore = create<SettingsState>()(
         audioOutputDeviceId: "",
         audioOutputDeviceLabel: "",
         defaultAudioChannels: "file" as ChannelPreset,
+        simpleTimeline: true,
 
         defaultTtsProvider: "elevenlabs" as TtsProvider,
         defaultLlmProvider: null,
@@ -168,6 +172,7 @@ export const useSettingsStore = create<SettingsState>()(
           set({ audioOutputDeviceId: id, audioOutputDeviceLabel: id ? label : "" });
         },
         setDefaultAudioChannels: (preset: ChannelPreset) => set({ defaultAudioChannels: preset }),
+        setSimpleTimeline: (enabled: boolean) => set({ simpleTimeline: enabled }),
 
         setDefaultTtsProvider: (provider: TtsProvider) =>
           set({ defaultTtsProvider: provider }),
@@ -289,6 +294,7 @@ export const useSettingsStore = create<SettingsState>()(
           audioOutputDeviceId: state.audioOutputDeviceId,
           audioOutputDeviceLabel: state.audioOutputDeviceLabel,
           defaultAudioChannels: state.defaultAudioChannels,
+          simpleTimeline: state.simpleTimeline,
           defaultTtsProvider: state.defaultTtsProvider,
           defaultLlmProvider: state.defaultLlmProvider,
           llmBaseUrl: state.llmBaseUrl,

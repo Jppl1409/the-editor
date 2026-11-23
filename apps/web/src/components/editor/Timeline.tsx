@@ -59,7 +59,8 @@ import { useUIStore } from "../../stores/ui-store";
 import { toast } from "../../stores/notification-store";
 import { useEngineStore } from "../../stores/engine-store";
 import { getPlaybackBridge } from "../../bridges/playback-bridge";
-import { trackHasAudioItems, trackHasVisualItems, graphicMemberClipIds, expectedMemberIds, type GraphicInstance, type Project } from "@openreel/core";
+import { trackHasAudioItems, trackHasVisualItems, graphicMemberClipIds, expectedMemberIds, findMainTrack, getTrackItems, type GraphicInstance, type Project } from "@openreel/core";
+import { useSettingsStore } from "../../stores/settings-store";
 import {
 
   getTimelineItemRanges,
@@ -1005,10 +1006,27 @@ export const Timeline: React.FC<{ onOpenMedia?: () => void }> = ({ onOpenMedia }
     return trimQueue.current;
   }, []);
 
-  const visualOrderTracks = useMemo(() => tracks, [tracks]);
+  // The Editor: na timeline simples só aparecem a trilha principal de vídeo e as trilhas com
+  // conteúdo. As vazias continuam no projeto (a IA e o soltar usam), só não ocupam a tela.
+  const simpleTimeline = useSettingsStore((state) => state.simpleTimeline);
+  const visualOrderTracks = useMemo(() => {
+    if (!simpleTimeline) return tracks;
+    const mainId = findMainTrack(project, "video")?.id;
+    const isVideo = (track: (typeof tracks)[number]) => track.type === "video" || track.type === "image";
+    const visible = new Set(
+      tracks.filter((track) => track.id === mainId || getTrackItems(project, track.id).length > 0).map((track) => track.id),
+    );
+    // Com vídeo na timeline, deixa uma faixa vazia acima para arrastar clipes para uma camada nova.
+    const topVideo = tracks.findIndex((track) => visible.has(track.id) && isVideo(track) && getTrackItems(project, track.id).length > 0);
+    for (let index = topVideo - 1; topVideo > 0 && index >= 0; index -= 1) {
+      const track = tracks[index];
+      if (isVideo(track) && !visible.has(track.id) && !track.locked) { visible.add(track.id); break; }
+    }
+    return tracks.filter((track) => visible.has(track.id));
+  }, [tracks, project, simpleTimeline]);
   // Keep each stored row height intact; its last two pixels form the authored
   // boundary between visual and audio sections in both synchronized columns.
-  const audioDividerTrackIds = useMemo(() => new Set(tracks.filter((track, index) => track.type !== "audio" && tracks[index + 1]?.type === "audio").map(track => track.id)), [tracks]);
+  const audioDividerTrackIds = useMemo(() => new Set(visualOrderTracks.filter((track, index) => track.type !== "audio" && visualOrderTracks[index + 1]?.type === "audio").map(track => track.id)), [visualOrderTracks]);
   const addTrackItems = useMemo(
     () => [
       {
@@ -1572,6 +1590,7 @@ export const Timeline: React.FC<{ onOpenMedia?: () => void }> = ({ onOpenMedia }
                       onDrop={handleTrackDrop}
                       onDragEnd={stopTrackDrag}
                       keyframeCount={keyframeCount}
+                      simple={simpleTimeline}
                     />
                     {!phone && automationLaneTracks[track.id] ? <TrackAutomationHeaderRows track={track} /> : null}
                   </div>
@@ -1688,9 +1707,9 @@ export const Timeline: React.FC<{ onOpenMedia?: () => void }> = ({ onOpenMedia }
                     );
                     const result = await importMedia(file);
                     if (result.success) {
-                      const newItem = useProjectStore
-                        .getState()
-                        .project.mediaLibrary.items.find(i => !beforeIds.has(i.id));
+                      // O id que o import devolve; o "item novo" por diferença erra quando dois arquivos chegam juntos.
+                      const items = useProjectStore.getState().project.mediaLibrary.items;
+                      const newItem = items.find(i => i.id === result.actionId) ?? items.find(i => !beforeIds.has(i.id));
                       if (newItem) {
                         await placeMediaClip(newItem.id, undefined, snappedTime);
                         const track = useProjectStore
