@@ -17,7 +17,10 @@ export function UpdateCheckButton({ className }: { className: string }): JSX.Ele
   useEffect(() => {
     if (!updater) return;
     return updater.onStatus((next) => {
-      if (next.state === "error" && !userAsked.current) return;
+      if (next.state === "error" && !userAsked.current) {
+        setStatus(null);
+        return;
+      }
       if (next.state === "none" && userAsked.current) {
         setUpToDate(true);
         window.setTimeout(() => setUpToDate(false), 4000);
